@@ -10,6 +10,7 @@ const app = express();
 
 app.use(bodyParser.json());
 
+// comment them when tests are going to be runned
 app.use((req, res, next) => {
     console.log(`${req.method} ${req.url}`);
     next();
