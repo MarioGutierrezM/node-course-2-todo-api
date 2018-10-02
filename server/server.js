@@ -52,7 +52,7 @@ app.delete('/todos/:id', (req, res) => {
         return res.status(404).send({ error: 'Invalid ID' });
     }
 
-    Todo.findOneAndDelete(ID).then(todo => {
+    Todo.findByIdAndRemove(ID).then(todo => {
         (todo) ? res.status(200).send({ todo }) : res.status(404).send({}) ;
     }).catch(err => res.status(400).send({ err }));
 });
