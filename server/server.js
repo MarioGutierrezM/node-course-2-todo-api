@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const { ObjectID } = require('mongodb');
 
 const { mongoose } = require('./db/mongoose');
 const { Todo } = require('./models/todo');
@@ -8,6 +9,11 @@ const { User } = require('./models/user');
 const app = express();
 
 app.use(bodyParser.json());
+
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.url}`);
+    next();
+});
 
 app.post('/todos', (req, res) => {
     const todo = new Todo({
@@ -25,7 +31,18 @@ app.get('/todos', (req, res) => {
     }).catch(err => {
         res.status(400).send(err);
     });
-})
+});
+
+app.get('/todos/:id', (req, res) => {
+    const ID = req.params.id;
+    if (!ObjectID.isValid(ID)) {
+        return res.status(404).send({ error: 'Invalid ID' });
+    }
+
+    Todo.findById(ID).then(todo => {
+        (todo) ? res.status(200).send({ todo }) : res.status(404).send({});
+    }).catch(e => res.status(400).send({ error: e }));
+});
 
 app.listen(3000, () => {
     console.log('Started on port 3000');
