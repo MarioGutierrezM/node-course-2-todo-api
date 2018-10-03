@@ -4,8 +4,8 @@ const { ObjectID } = require('mongodb');
 const _ = require('lodash');
 
 const { mongoose } = require('./db/mongoose');
-const { Todo } = require('./models/todo');
-const { User } = require('./models/user');
+const { TodoModel } = require('./models/todo');
+const { UserModel } = require('./models/user');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -18,8 +18,9 @@ app.use((req, res, next) => {
     next();
 });
 
+// *** todos routes ***
 app.post('/todos', (req, res) => {
-    const todo = new Todo({
+    const todo = new TodoModel({
         text: req.body.text
     });
 
@@ -29,7 +30,7 @@ app.post('/todos', (req, res) => {
 });
 
 app.get('/todos', (req, res) => {
-    Todo.find().then(todos => {
+    TodoModel.find().then(todos => {
         res.status(200).send({ todos });
     }).catch(err => {
         res.status(400).send(err);
@@ -42,7 +43,7 @@ app.get('/todos/:id', (req, res) => {
         return res.status(404).send({ error: 'Invalid ID' });
     }
 
-    Todo.findById(ID).then(todo => {
+    TodoModel.findById(ID).then(todo => {
         (todo) ? res.status(200).send({ todo }) : res.status(404).send({});
     }).catch(e => res.status(400).send({ error: e }));
 });
@@ -53,7 +54,7 @@ app.delete('/todos/:id', (req, res) => {
         return res.status(404).send({ error: 'Invalid ID' });
     }
 
-    Todo.findByIdAndRemove(ID).then(todo => {
+    TodoModel.findByIdAndRemove(ID).then(todo => {
         (todo) ? res.status(200).send({ todo }) : res.status(404).send({}) ;
     }).catch(err => res.status(400).send({ err }));
 });
@@ -73,13 +74,25 @@ app.patch('/todos/:id', (req, res) => {
         body.completedAt = null;
     }
 
-    Todo.findByIdAndUpdate(ID, { $set: body }, { new: true }).then(todo => {
+    TodoModel.findByIdAndUpdate(ID, { $set: body }, { new: true }).then(todo => {
         if (!todo) {
             return res.status(404).send();
         }
         res.status(200).send({ todo });
     }).catch(err => res.status(400).send({ err }));
 
+});
+
+// *** user routes ***
+app.post('/users', (req, res) => {
+    const body = _.pick(req.body, ['email', 'password']);
+    const user = new UserModel(body);
+
+    user.save().then(() => {
+        return user.generateAuthToken();
+    }).then(token => {
+        res.header('x-auth', token).send(user);
+    }).catch(err => res.status(404).send(err));
 });
 
 app.listen(port, () => {
