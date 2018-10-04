@@ -3,7 +3,7 @@ const supertest = require('supertest');
 const { ObjectID } = require('mongodb');
 
 const { app } = require('./../server');
-const { Todo } = require('./../models/todo');
+const { TodoModel } = require('./../models/todo');
 
 const todos = [
     { _id: new ObjectID(), text: '1st tes' },
@@ -13,8 +13,8 @@ const todos = [
 beforeEach((done) => {
     //database empty
     // remove -> deleteMany
-    Todo.deleteMany({}).then(() => {
-        return Todo.insertMany(todos);
+    TodoModel.deleteMany({}).then(() => {
+        return TodoModel.insertMany(todos);
     }).then(() => done());
 });
 
@@ -32,7 +32,7 @@ describe('POST /todos', () => {
                 if (err) {
                     return done(err);
                 }
-                Todo.find({ text }).then(todos => {
+                TodoModel.find({ text }).then(todos => {
                     expect(todos.length).toBe(1);
                     expect(todos[0].text).toBe(text);
                     done();
@@ -49,7 +49,7 @@ describe('POST /todos', () => {
                 if (err) {
                     return done(err);
                 }
-                Todo.find().then(todos => {
+                TodoModel.find().then(todos => {
                     expect(todos.length).toBe(2);
                     done();
                 }).catch(e => done(e));
@@ -115,7 +115,7 @@ describe('DELETE /todos/id', () => {
                 if (err) {
                     return done(err);
                 }
-                Todo.findById(hexId).then(todo => {
+                TodoModel.findById(hexId).then(todo => {
                     expect(todo).toBeNull();
                     done();
                 }).catch(err => done(err));
