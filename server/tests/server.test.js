@@ -210,7 +210,7 @@ describe('POST /users', () => {
                     expect(user).toBeDefined();
                     expect(user.password).toBeUndefined();
                     done();
-                });
+                }).catch(err => done(err));
             })
     });
     
@@ -236,6 +236,51 @@ describe('POST /users', () => {
                 expect(res.body.name).toBe('MongoError');
             })
             .end(done);
+    });
+});
+
+describe('POST /users/login', () => {
+    it('should login user and return auth token', (done) => {
+        const user = { email: users[1].email, password: users[1].password };
+        supertest(app)
+            .post('/users/login')
+            .send(user)
+            .expect(200)
+            .expect(res => {
+                expect(res.headers['x-auth']).toBeDefined();
+            })
+            .end((err, res) => {
+                if (err) {
+                    return done(err);
+                }
+                UserModel.findById(users[1]._id).then(user => {
+                    expect(user.tokens[0]).toMatchObject({
+                        access: 'auth',
+                        token: res.headers['x-auth']
+                    });
+                    done();
+                }).catch(err => done(err));
+            });
+    });
+
+    it('should reject invalid login', (done) => {
+        const badUser = { email: 'mag@itxe.net', password: '123*asd' };
+        supertest(app)
+            .post('/users/login')
+            .send(badUser)
+            .expect(400)
+            .expect(res => {
+                expect(res.headers['x-auth']).toBeUndefined();
+            })
+            .end((err, res) => {
+                if (err) {
+                    return done(err);
+                }
+                UserModel.findById(users[1]._id).then(user => {
+                    expect(user.tokens.length).toBe(0);
+                    done();
+                }).catch(err => done(err));
+            });
     });
 });
 

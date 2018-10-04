@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const { ObjectID } = require('mongodb');
 const _ = require('lodash');
+const morgan = require('morgan');
 
 const { mongoose } = require('./db/mongoose');
 const { TodoModel } = require('./models/todo');
@@ -12,12 +13,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
-
-// comment them when tests are going to be runned
-app.use((req, res, next) => {
-    console.log(`${req.method} ${req.url}`);
-    next();
-});
+// app.use(morgan('tiny')); // comment it when tests are going to be runned
 
 // *** todos routes ***
 app.post('/todos', (req, res) => {
