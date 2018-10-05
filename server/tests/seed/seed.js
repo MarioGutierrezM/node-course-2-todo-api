@@ -18,13 +18,26 @@ const users = [{
     }, {
         _id: userTwoId,
         email: 'mario2@exp.com',
-        password: 'pass123*'
+        password: 'pass123*',
+        tokens: [{
+            access: 'auth',
+            token: jwt.sign({ _id: userTwoId, access: 'auth' }, 'abc123').toString()
+        }]
     }
 ];
 
 const todos = [
-    { _id: new ObjectID(), text: '1st tes' },
-    { _id: new ObjectID(), text: '2nd test', completedAt: 333, completed: true }
+    {
+        _id: new ObjectID(),
+        text: '1st tes',
+        _creator: userOneId
+    }, {
+        _id: new ObjectID(),
+        text: '2nd test',
+        completedAt: 333,
+        completed: true,
+        _creator: userTwoId
+    }
 ];
 
 //clean and fill database

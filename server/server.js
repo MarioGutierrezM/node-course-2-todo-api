@@ -16,9 +16,10 @@ app.use(bodyParser.json());
 // app.use(morgan('tiny')); // comment it when tests are going to be runned
 
 // *** todos routes ***
-app.post('/todos', (req, res) => {
+app.post('/todos', authenticate, (req, res) => {
     const todo = new TodoModel({
-        text: req.body.text
+        text: req.body.text,
+        _creator: req.user._id
     });
 
     todo.save()
@@ -26,37 +27,37 @@ app.post('/todos', (req, res) => {
         .catch(err => res.status(404).send(err));
 });
 
-app.get('/todos', (req, res) => {
-    TodoModel.find().then(todos => {
+app.get('/todos', authenticate, (req, res) => {
+    TodoModel.find({ _creator: req.user._id }).then(todos => {
         res.status(200).send({ todos });
     }).catch(err => {
         res.status(400).send(err);
     });
 });
 
-app.get('/todos/:id', (req, res) => {
+app.get('/todos/:id', authenticate, (req, res) => {
     const ID = req.params.id;
     if (!ObjectID.isValid(ID)) {
         return res.status(404).send({ error: 'Invalid ID' });
     }
 
-    TodoModel.findById(ID).then(todo => {
+    TodoModel.findOne({ _id: ID, _creator: req.user._id }).then(todo => {
         (todo) ? res.status(200).send({ todo }) : res.status(404).send({});
     }).catch(e => res.status(400).send({ error: e }));
 });
 
-app.delete('/todos/:id', (req, res) => {
+app.delete('/todos/:id', authenticate, (req, res) => {
     const ID = req.params.id;
     if (!ObjectID.isValid(ID)) {
         return res.status(404).send({ error: 'Invalid ID' });
     }
 
-    TodoModel.findByIdAndRemove(ID).then(todo => {
+    TodoModel.findOneAndRemove({ _id: ID, _creator: req.user._id }).then(todo => {
         (todo) ? res.status(200).send({ todo }) : res.status(404).send({}) ;
     }).catch(err => res.status(400).send({ err }));
 });
 
-app.patch('/todos/:id', (req, res) => {
+app.patch('/todos/:id', authenticate, (req, res) => {
     const ID = req.params.id;
     const body = _.pick(req.body, ['text', 'completed']);
 
@@ -71,7 +72,8 @@ app.patch('/todos/:id', (req, res) => {
         body.completedAt = null;
     }
 
-    TodoModel.findByIdAndUpdate(ID, { $set: body }, { new: true }).then(todo => {
+    TodoModel.findOneAndUpdate({ _id: ID, _creator: req.user._id }, { $set: body }, { new: true })
+    .then(todo => {
         if (!todo) {
             return res.status(404).send();
         }
